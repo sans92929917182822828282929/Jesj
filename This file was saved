@@ -1,1 +1,176 @@
-content://ru.zdevs.zarchiver.external/storage/emulated/0/Arceus X/Script Hub/text.txt
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local CamlockState = false
+local Prediction = 0.15496992
+local HorizontalPrediction = 0.111076110
+local VerticalPrediction = 0.11034856
+local XPrediction = 21
+local YPrediction = 21
+
+local Locked = true
+getgenv().Key = "q"
+
+function FindNearestEnemy()
+    local ClosestDistance, ClosestPlayer = math.huge, nil
+    local CenterPosition = Vector2.new(
+        game:GetService("GuiService"):GetScreenResolution().X / 2,
+        game:GetService("GuiService"):GetScreenResolution().Y / 2
+    )
+
+    for _, Player in ipairs(game:GetService("Players"):GetPlayers()) do
+        if Player ~= LocalPlayer then
+            local Character = Player.Character
+            if Character and Character:FindFirstChild("HumanoidRootPart") and Character.Humanoid.Health > 0 then
+                local Position, IsVisibleOnViewport = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(Character.HumanoidRootPart.Position)
+                if IsVisibleOnViewport then
+                    local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
+                    if Distance < ClosestDistance then
+                        ClosestPlayer = Character.HumanoidRootPart
+                        ClosestDistance = Distance
+                    end
+                end
+            end
+        end
+    end
+
+    return ClosestPlayer
+end
+
+local enemy = nil
+local trail = nil
+
+-- Function to aim the camera at the nearest enemy's HumanoidRootPart
+RunService.Heartbeat:Connect(function()
+    if CamlockState == true then
+        if enemy then
+            local camera = workspace.CurrentCamera
+            camera.CFrame = CFrame.new(camera.CFrame.p, enemy.Position + enemy.Velocity * Prediction)
+        end
+    end
+end)
+
+Mouse.KeyDown:Connect(function(k)
+    if k == getgenv().Key then
+        Locked = not Locked
+        if Locked then
+            enemy = FindNearestEnemy()
+            if enemy then
+                CamlockState = true
+                -- Create trail
+                trail = Instance.new("Trail", enemy)
+                local attachment0 = Instance.new("Attachment", enemy)
+                local attachment1 = Instance.new("Attachment", enemy)
+                attachment0.Position = Vector3.new(0, 0, 0)
+                attachment1.Position = Vector3.new(0, 0, 2)
+                trail.Attachment0 = attachment0
+                trail.Attachment1 = attachment1
+                trail.Color = ColorSequence.new(Color3.fromRGB(0, 255, 255))
+                trail.Lifetime = 0.5
+            end
+        else
+            if enemy ~= nil then
+                enemy = nil
+                CamlockState = false
+                -- Remove trail
+                if trail then
+                    trail:Destroy()
+                    trail = nil
+                end
+            end
+        end
+    end
+end)
+
+local Nova = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Logo = Instance.new("ImageLabel")
+local TextButton = Instance.new("TextButton")
+local UICorner_2 = Instance.new("UICorner")
+
+--Properties:
+
+Nova.Name = "sanseaa,"
+Nova.Parent = game.CoreGui
+Nova.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Frame.Parent = Nova
+Frame.BackgroundColor3 = Color3.fromRGB(1, 1, 1)
+Frame.BorderColor3 = Color3.fromRGB(1, 1, 1)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0.133798108, 0, 0.20107238, 0)
+Frame.Size = UDim2.new(0, 202, 0, 70)
+Frame.Active = true
+Frame.Draggable = true
+
+local function TopContainer()
+    Frame.Position = UDim2.new(0.5, -Frame.AbsoluteSize.X / 2, 0, -Frame.AbsoluteSize.Y / 2)
+end
+
+TopContainer()
+Frame:GetPropertyChangedSignal("AbsoluteSize"):Connect(TopContainer)
+
+UICorner.Parent = Frame
+
+Logo.Name = "Logo"
+Logo.Parent = Frame
+Logo.BackgroundColor3 = Color3.fromRGB(188, 255, 188)
+Logo.BackgroundTransparency = 3.000
+Logo.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Logo.BorderSizePixel = 0
+Logo.Position = UDim2.new(0.326732665, 0, 0, 0)
+Logo.Size = UDim2.new(0, 70, 0, 70)
+Logo.Image = "rbxassetid://830610397"
+Logo.ImageTransparency = 0.300
+
+TextButton.Parent = Frame
+TextButton.BackgroundColor3 = Color3.fromRGB(100, 60, 245)
+TextButton.BackgroundTransparency = 5.000
+TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextButton.BorderSizePixel = 0
+TextButton.Position = UDim2.new(0.0792079195, 0, 0.18571429, 0)
+TextButton.Size = UDim2.new(0, 170, 0, 44)
+TextButton.Font = Enum.Font.SourceSansSemibold
+TextButton.Text = "Toggle sans"
+TextButton.TextColor3 = Color3.fromRGB(25, 255, 255)
+TextButton.TextScaled = true
+TextButton.TextSize = 18.000
+TextButton.TextWrapped = true
+
+local state = true
+TextButton.MouseButton1Click:Connect(function()
+    state = not state
+    if not state then
+        TextButton.Text = "sans ON"
+        CamlockState = true
+        enemy = FindNearestEnemy()
+        if enemy then
+            -- Create trail
+            trail = Instance.new("Trail", enemy)
+            local attachment0 = Instance.new("Attachment", enemy)
+            local attachment1 = Instance.new("Attachment", enemy)
+            attachment0.Position = Vector3.new(0, 0, 0)
+            attachment1.Position = Vector3.new(0, 0, 2)
+            trail.Attachment0 = attachment0
+            trail.Attachment1 = attachment1
+            trail.Color = ColorSequence.new(Color3.fromRGB(0, 255, 255))
+            trail.Lifetime = 0.5
+        end
+    else
+        TextButton.Text = "sans OFF"
+        CamlockState = false
+        enemy = nil
+        -- Remove trail
+        if trail then
+            trail:Destroy()
+            trail = nil
+        end
+    end
+end)
+
+-- Function to hide the loading screen after a certain duration
+local function HideLoadingScreen()
+    LoadingScreen:Destroy()
+end
